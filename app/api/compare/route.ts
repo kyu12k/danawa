@@ -1,25 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import Groq from "groq-sdk";
 import OpenAI from "openai";
 import Anthropic from "@anthropic-ai/sdk";
 
+type HistoryItem = { role: "user" | "assistant"; content: string };
+
 export async function POST(req: NextRequest) {
-  const { prompt } = await req.json();
+  const { prompt, history = [] }: { prompt: string; history: HistoryItem[] } = await req.json();
   if (!prompt) return NextResponse.json({ error: "프롬프트를 입력해주세요." }, { status: 400 });
 
   const results = await Promise.allSettled([
-    callGemini(prompt),
-    callGroq(prompt),
-    callOpenAI(prompt),
-    callClaude(prompt),
+    callGemini(prompt, history),
+    callOpenAI(prompt, history),
+    callClaude(prompt, history),
   ]);
 
   return NextResponse.json({
     gemini: extract(results[0]),
-    groq: extract(results[1]),
-    openai: extract(results[2]),
-    claude: extract(results[3]),
+    openai: extract(results[1]),
+    claude: extract(results[2]),
   });
 }
 
@@ -28,37 +27,40 @@ function extract(result: PromiseSettledResult<string>) {
   return { text: null, error: String(result.reason) };
 }
 
-async function callGemini(prompt: string): Promise<string> {
+async function callGemini(prompt: string, history: HistoryItem[]): Promise<string> {
   const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
   const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-  const result = await model.generateContent(prompt);
+  const chat = model.startChat({
+    history: history.map((h) => ({
+      role: h.role === "assistant" ? "model" : "user",
+      parts: [{ text: h.content }],
+    })),
+  });
+  const result = await chat.sendMessage(prompt);
   return result.response.text();
 }
 
-async function callGroq(prompt: string): Promise<string> {
-  const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  const completion = await groq.chat.completions.create({
-    model: "llama-3.3-70b-versatile",
-    messages: [{ role: "user", content: prompt }],
-  });
-  return completion.choices[0].message.content ?? "";
-}
-
-async function callOpenAI(prompt: string): Promise<string> {
+async function callOpenAI(prompt: string, history: HistoryItem[]): Promise<string> {
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const completion = await openai.chat.completions.create({
     model: "gpt-4o-mini",
-    messages: [{ role: "user", content: prompt }],
+    messages: [
+      ...history.map((h) => ({ role: h.role, content: h.content })),
+      { role: "user", content: prompt },
+    ],
   });
   return completion.choices[0].message.content ?? "";
 }
 
-async function callClaude(prompt: string): Promise<string> {
+async function callClaude(prompt: string, history: HistoryItem[]): Promise<string> {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const message = await anthropic.messages.create({
     model: "claude-haiku-4-5-20251001",
     max_tokens: 1024,
-    messages: [{ role: "user", content: prompt }],
+    messages: [
+      ...history.map((h) => ({ role: h.role, content: h.content })),
+      { role: "user", content: prompt },
+    ],
   });
   const block = message.content[0];
   return block.type === "text" ? block.text : "";
