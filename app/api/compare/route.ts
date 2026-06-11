@@ -43,7 +43,7 @@ async function callGemini(prompt: string, history: HistoryItem[]): Promise<strin
 async function callOpenAI(prompt: string, history: HistoryItem[]): Promise<string> {
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
     messages: [
       ...history.map((h) => ({ role: h.role, content: h.content })),
       { role: "user", content: prompt },
@@ -55,7 +55,7 @@ async function callOpenAI(prompt: string, history: HistoryItem[]): Promise<strin
 async function callClaude(prompt: string, history: HistoryItem[]): Promise<string> {
   const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
   const message = await anthropic.messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: "claude-sonnet-4-6",
     max_tokens: 1024,
     messages: [
       ...history.map((h) => ({ role: h.role, content: h.content })),

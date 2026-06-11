@@ -6,8 +6,8 @@ import { popResumeSession, saveSession } from "@/lib/storage";
 
 const MODELS = [
   { key: "gemini", name: "Gemini 2.5 Flash", color: "border-blue-400", badge: "bg-blue-100 text-blue-700" },
-  { key: "openai", name: "GPT-4o mini", color: "border-green-400", badge: "bg-green-100 text-green-700" },
-  { key: "claude", name: "Claude Haiku", color: "border-purple-400", badge: "bg-purple-100 text-purple-700" },
+  { key: "openai", name: "GPT-4o", color: "border-green-400", badge: "bg-green-100 text-green-700" },
+  { key: "claude", name: "Claude Sonnet", color: "border-purple-400", badge: "bg-purple-100 text-purple-700" },
 ];
 
 type Results = Record<string, { text: string | null; error: string | null }>;

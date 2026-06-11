@@ -16,8 +16,8 @@ import {
 
 const MODEL_NAMES: Record<string, string> = {
   gemini: "Gemini 2.5 Flash",
-  openai: "GPT-4o mini",
-  claude: "Claude Haiku",
+  openai: "GPT-4o",
+  claude: "Claude Sonnet",
 };
 
 export default function LibraryPage() {
