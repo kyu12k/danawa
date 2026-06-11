@@ -22,6 +22,13 @@ export default function Home() {
   const [currentResults, setCurrentResults] = useState<Results | null>(null);
   const [loading, setLoading] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  function handleCopy(text: string, id: string) {
+    navigator.clipboard.writeText(text);
+    setCopied(id);
+    setTimeout(() => setCopied(null), 1500);
+  }
 
   useEffect(() => {
     const session = popResumeSession();
@@ -151,9 +158,19 @@ export default function Home() {
                       isSelected ? "opacity-100 ring-2 ring-blue-400" : "opacity-30"
                     }`}
                   >
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${m.badge}`}>{m.name}</span>
-                      {isSelected && <span className="text-xs text-blue-500 font-semibold">✓ 선택됨</span>}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-bold px-3 py-1 rounded-full ${m.badge}`}>{m.name}</span>
+                        {isSelected && <span className="text-xs text-blue-500 font-semibold">✓ 선택됨</span>}
+                      </div>
+                      {r?.text && (
+                        <button
+                          onClick={() => handleCopy(r.text!, `past-${i}-${m.key}`)}
+                          className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors shrink-0"
+                        >
+                          {copied === `past-${i}-${m.key}` ? "복사됨 ✓" : "복사"}
+                        </button>
+                      )}
                     </div>
                     <p className="mt-3 text-gray-700 text-sm leading-relaxed whitespace-pre-wrap line-clamp-3">
                       {r?.text}
@@ -204,7 +221,17 @@ export default function Home() {
                 const r = currentResults[m.key];
                 return (
                   <div key={m.key} className={`bg-white rounded-2xl shadow border-t-4 ${m.color} p-6`}>
-                    <span className={`text-xs font-bold px-3 py-1 rounded-full ${m.badge}`}>{m.name}</span>
+                    <div className="flex items-center justify-between">
+                      <span className={`text-xs font-bold px-3 py-1 rounded-full ${m.badge}`}>{m.name}</span>
+                      {r?.text && (
+                        <button
+                          onClick={() => handleCopy(r.text!, `cur-${m.key}`)}
+                          className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 rounded-lg hover:bg-gray-100 transition-colors"
+                        >
+                          {copied === `cur-${m.key}` ? "복사됨 ✓" : "복사"}
+                        </button>
+                      )}
+                    </div>
                     {r?.error ? (
                       <p className="mt-4 text-red-400 text-sm">{r.error}</p>
                     ) : (
